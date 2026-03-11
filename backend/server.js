@@ -3,6 +3,8 @@ const cors = require("cors")
 
 const db = require("./db")
 
+const judokaRoutes = require("./routes/judokas")
+
 const app = express()
 
 app.use(cors())
@@ -11,6 +13,8 @@ app.use(express.json())
 app.get("/", (req, res) => {
   res.json({ message: "SolArc API running" })
 })
+
+app.use("/judokas", judokaRoutes)
 
 app.listen(5000, () => {
   console.log("Server started on port 5000")
