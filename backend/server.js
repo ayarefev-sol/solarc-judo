@@ -7,8 +7,12 @@ const judokaRoutes = require("./routes/judokas")
 
 const app = express()
 
+const randoriRoutes = require("./routes/randori")
+
 app.use(cors())
 app.use(express.json())
+
+app.use("/randori", randoriRoutes)
 
 app.get("/", (req, res) => {
   res.json({ message: "SolArc API running" })
