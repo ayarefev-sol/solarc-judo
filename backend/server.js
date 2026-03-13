@@ -9,6 +9,8 @@ const app = express()
 
 const randoriRoutes = require("./routes/randori")
 
+const analyticsRoutes = require("./routes/analytics")
+
 app.use(cors())
 app.use(express.json())
 
@@ -19,6 +21,8 @@ app.get("/", (req, res) => {
 })
 
 app.use("/judokas", judokaRoutes)
+
+app.use("/analytics", analyticsRoutes)
 
 app.listen(5000, () => {
   console.log("Server started on port 5000")

@@ -35,8 +35,6 @@ router.post("/", (req, res) => {
 
 })
 
-module.exports = router
-
 router.get("/", (req,res)=>{
 
   const sql = `SELECT * FROM randori`
@@ -73,3 +71,5 @@ router.get("/:judokaId", (req,res)=>{
   })
 
 })
+
+module.exports = router
