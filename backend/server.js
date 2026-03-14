@@ -11,6 +11,8 @@ const randoriRoutes = require("./routes/randori")
 
 const analyticsRoutes = require("./routes/analytics")
 
+const throwsRoutes = require("./routes/throws")
+
 app.use(cors())
 app.use(express.json())
 
@@ -23,6 +25,8 @@ app.get("/", (req, res) => {
 app.use("/judokas", judokaRoutes)
 
 app.use("/analytics", analyticsRoutes)
+
+app.use("/throws", throwsRoutes)
 
 app.listen(5000, () => {
   console.log("Server started on port 5000")
@@ -48,5 +52,12 @@ db.serialize(() => {
     shido INTEGER,
     osaekomi_seconds INTEGER
   )`)
+
+  db.run(`CREATE TABLE IF NOT EXISTS throws(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  randori_id INTEGER,
+  technique TEXT,
+  result TEXT
+)`)
 
 })
