@@ -60,4 +60,81 @@ router.get("/:id",(req,res)=>{
 
 })
 
+router.get("/:id/full", (req,res)=>{
+
+  const sessionId = req.params.id
+
+  // 1. получить тренировку
+  db.get(
+    `SELECT * FROM sessions WHERE id = ?`,
+    [sessionId],
+    (err, session)=>{
+
+      if(err){
+        return res.status(500).json({error:err.message})
+      }
+
+      if(!session){
+        return res.status(404).json({error:"Session not found"})
+      }
+
+      // 2. получить схватки
+      db.all(
+        `SELECT * FROM randori WHERE session_id = ?`,
+        [sessionId],
+        (err, randoriList)=>{
+
+          if(err){
+            return res.status(500).json({error:err.message})
+          }
+
+          if(randoriList.length === 0){
+            return res.json({ ...session, randori: [] })
+          }
+
+          let completed = 0
+
+          randoriList.forEach((randori, index)=>{
+
+            // 3. получить спортсмена
+            db.get(
+              `SELECT * FROM judokas WHERE id = ?`,
+              [randori.judoka_id],
+              (err, judoka)=>{
+
+                randori.judoka = judoka || null
+
+                // 4. получить броски
+                db.all(
+                  `SELECT * FROM throws WHERE randori_id = ?`,
+                  [randori.id],
+                  (err, throwsList)=>{
+
+                    randori.throws = throwsList || []
+
+                    completed++
+
+                    if(completed === randoriList.length){
+                      res.json({
+                        ...session,
+                        randori: randoriList
+                      })
+                    }
+
+                  }
+                )
+
+              }
+            )
+
+          })
+
+        }
+      )
+
+    }
+  )
+
+})
+
 module.exports = router

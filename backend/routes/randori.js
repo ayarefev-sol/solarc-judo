@@ -4,25 +4,25 @@ const db = require("../db")
 
 router.post("/", (req, res) => {
 
-  const {
-    judoka_id,
-    opponent,
-    throws_attempted,
-    throws_scored,
-    ippon,
-    waza_ari,
-    shido,
-    osaekomi_seconds
-  } = req.body
+const { session_id, judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds } = req.body
 
   const sql = `
-    INSERT INTO randori
-    (judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+   INSERT INTO randori (
+  session_id,
+  judoka_id,
+  opponent,
+  throws_attempted,
+  throws_scored,
+  ippon,
+  waza_ari,
+  shido,
+  osaekomi_seconds
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
 
   db.run(sql,
-    [judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds],
+    [session_id, judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds],
     function(err){
 
       if(err){
