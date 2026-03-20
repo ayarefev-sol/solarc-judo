@@ -105,11 +105,19 @@ router.get("/:id/full", (req,res)=>{
                 randori.judoka = judoka || null
 
                 // 4. получить броски
-                db.all(
-                  `SELECT * FROM throws WHERE randori_id = ?`,
-                  [randori.id],
-                  (err, throwsList)=>{
 
+                const sqlThrows = `
+                   SELECT 
+                   throws.id,
+                   throws.result,
+                   techniques.name as technique
+                   FROM throws
+                   LEFT JOIN techniques 
+                   ON throws.technique_id = techniques.id
+                   WHERE throws.randori_id = ?
+                  `
+                db.all(sqlThrows, [randori.id], (err, throwsList)=>{
+                 
                     randori.throws = throwsList || []
 
                     completed++

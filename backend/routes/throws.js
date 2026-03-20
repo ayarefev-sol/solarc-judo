@@ -11,7 +11,7 @@ router.post("/", (req,res)=>{
 VALUES (?, ?, ?)
   `
 
-  db.run(sql,[randori_id, technique, result], function(err){
+  db.run(sql,[randori_id, technique_id, result], function(err){
 
     if(err){
       return res.status(500).json({error:err.message})
