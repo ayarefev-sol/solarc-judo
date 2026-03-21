@@ -9,7 +9,7 @@ const app = express()
 
 const randoriRoutes = require("./routes/randori")
 
-const analyticsRoutes = require("./routes/analytics")
+const analyticsRoutes = require('./routes/analytics')
 
 const throwsRoutes = require("./routes/throws")
 
@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 
 app.use("/judokas", judokaRoutes)
 
-app.use("/analytics", analyticsRoutes)
+app.use('/analytics', analyticsRoutes)
 
 app.use("/throws", throwsRoutes)
 

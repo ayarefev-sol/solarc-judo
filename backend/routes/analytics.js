@@ -1,49 +1,97 @@
-const express = require("express")
+const express = require('express')
 const router = express.Router()
-const db = require("../db")
+const db = require('../db')
 
-router.get("/:judokaId", (req,res)=>{
+/*
+  Аналитика по техникам (универсальная)
+  GET /analytics/techniques?judoka_id=1
+*/
+router.get('/techniques', (req, res) => {
 
-  const id = req.params.judokaId
+  const { judoka_id } = req.query
 
-  const sql = `
-    SELECT
-      COUNT(*) as total_fights,
-      SUM(throws_attempted) as attempts,
-      SUM(throws_scored) as scored,
-      SUM(ippon) as ippons,
-      SUM(waza_ari) as waza_aris,
-      SUM(osaekomi_seconds) as osaekomi_time
-    FROM randori
-    WHERE judoka_id = ?
+  let sql = `
+    SELECT 
+      techniques.id,
+      techniques.name as technique,
+      COUNT(throws.id) as attempts,
+      SUM(CASE WHEN throws.result = 'ippon' THEN 1 ELSE 0 END) as ippon
+    FROM throws
+    LEFT JOIN techniques 
+      ON throws.technique_id = techniques.id
+    LEFT JOIN randori 
+      ON throws.randori_id = randori.id
   `
 
-  db.get(sql,[id],(err,row)=>{
+  let params = []
 
-    if(err){
-      return res.status(500).json({error:err.message})
+  if (judoka_id) {
+    sql += ` WHERE randori.judoka_id = ?`
+    params.push(judoka_id)
+  }
+
+  sql += `
+    GROUP BY techniques.id, techniques.name
+    ORDER BY attempts DESC
+  `
+
+  db.all(sql, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message })
     }
 
-    const attempts = row.attempts || 0
-    const scored = row.scored || 0
-    const ippons = row.ippons || 0
+    const result = rows.map(row => ({
+      technique_id: row.id,
+      technique: row.technique,
+      attempts: row.attempts,
+      ippon: row.ippon || 0,
+      success_rate: row.attempts > 0
+        ? Math.round((row.ippon / row.attempts) * 100)
+        : 0
+    }))
 
-    const throw_success = attempts ? (scored/attempts) : 0
-    const ippon_rate = row.total_fights ? (ippons/row.total_fights) : 0
-
-    res.json({
-      fights: row.total_fights,
-      throw_attempts: attempts,
-      throws_scored: scored,
-      throw_success_rate: throw_success,
-      ippons: ippons,
-      ippon_rate: ippon_rate,
-      waza_ari: row.waza_aris,
-      osaekomi_seconds: row.osaekomi_time
-    })
-
+    res.json(result)
   })
-
 })
 
-module.exports = router
+/*
+  Прогресс по датам
+  GET /analytics/progress?judoka_id=1
+*/
+router.get('/progress', (req, res) => {
+
+  const { judoka_id } = req.query
+
+  if (!judoka_id) {
+    return res.status(400).json({ error: 'judoka_id required' })
+  }
+
+  const sql = `
+    SELECT 
+      sessions.date,
+      COUNT(randori.id) as fights,
+      SUM(randori.ippon) as ippon
+    FROM randori
+    LEFT JOIN sessions 
+      ON randori.session_id = sessions.id
+    WHERE randori.judoka_id = ?
+    GROUP BY sessions.date
+    ORDER BY sessions.date ASC
+  `
+
+  db.all(sql, [judoka_id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message })
+    }
+
+    const result = rows.map(row => ({
+      date: row.date,
+      fights: row.fights,
+      ippon: row.ippon || 0
+    }))
+
+    res.json(result)
+  })
+})
+
+module.exports = router 
