@@ -1,45 +1,48 @@
-const express = require("express")
-const router = express.Router()
-const db = require("../db")
+const express = require("express");
+const router = express.Router();
+const db = require("../db/db");
 
-router.post("/", (req,res)=>{
+// CREATE throw
+router.post("/", (req, res) => {
+  const { randori_id, judoka_id, technique, result } = req.body;
 
-  const { randori_id, technique_id, result } = req.body
+  if (!randori_id || !judoka_id || !technique || !result) {
+    return res.status(400).json({ error: "missing fields" });
+  }
 
-  const sql = `
-    INSERT INTO throws (randori_id, technique_id, result)
-VALUES (?, ?, ?)
-  `
+  db.run(
+    `INSERT INTO throws (randori_id, judoka_id, technique, result)
+     VALUES (?, ?, ?, ?)`,
+    [randori_id, judoka_id, technique, result],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
 
-  db.run(sql,[randori_id, technique_id, result], function(err){
-
-    if(err){
-      return res.status(500).json({error:err.message})
+      res.json({
+        id: this.lastID,
+        randori_id,
+        judoka_id,
+        technique,
+        result,
+      });
     }
+  );
+});
 
-    res.json({id:this.lastID})
+// GET throws by randori
+router.get("/randori/:randori_id", (req, res) => {
+  db.all(
+    "SELECT * FROM throws WHERE randori_id = ?",
+    [req.params.randori_id],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
 
-  })
-
-router.get("/:randoriId",(req,res)=>{
-
-  const id = req.params.randoriId
-
-  const sql = `
-    SELECT * FROM throws
-    WHERE randori_id = ?
-  `
-
-  db.all(sql,[id],(err,rows)=>{
-
-    if(err){
-      return res.status(500).json({error:err.message})
+      res.json(rows);
     }
+  );
+});
 
-    res.json(rows)
-  })
-})
-
-})
-
-module.exports = router
+module.exports = router;

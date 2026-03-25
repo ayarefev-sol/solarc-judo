@@ -1,75 +1,44 @@
-const express = require("express")
-const router = express.Router()
-const db = require("../db")
+const express = require("express");
+const router = express.Router();
+const db = require("../db/db");
 
+// CREATE randori
 router.post("/", (req, res) => {
+  const { session_id, judoka_a_id, judoka_b_id, winner_id } = req.body;
 
-const { session_id, judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds } = req.body
+  if (!session_id || !judoka_a_id || !judoka_b_id) {
+    return res.status(400).json({ error: "missing fields" });
+  }
 
-  const sql = `
-   INSERT INTO randori (
-  session_id,
-  judoka_id,
-  opponent,
-  throws_attempted,
-  throws_scored,
-  ippon,
-  waza_ari,
-  shido,
-  osaekomi_seconds
-)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `
+  db.run(
+    `INSERT INTO randori (session_id, judoka_a_id, judoka_b_id, winner_id)
+     VALUES (?, ?, ?, ?)`,
+    [session_id, judoka_a_id, judoka_b_id, winner_id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
 
-  db.run(sql,
-    [session_id, judoka_id, opponent, throws_attempted, throws_scored, ippon, waza_ari, shido, osaekomi_seconds],
-    function(err){
-
-      if(err){
-        return res.status(500).json({ error: err.message })
-      }
-
-      res.json({ id: this.lastID })
-
-    })
-
-})
-
-router.get("/", (req,res)=>{
-
-  const sql = `SELECT * FROM randori`
-
-  db.all(sql, [], (err, rows)=>{
-
-    if(err){
-      return res.status(500).json({ error: err.message })
+      res.json({
+        id: this.lastID,
+        session_id,
+        judoka_a_id,
+        judoka_b_id,
+        winner_id,
+      });
     }
+  );
+});
 
-    res.json(rows)
-
-  })
-
-})
-
-router.get("/:judokaId", (req,res)=>{
-
-  const id = req.params.judokaId
-
-  const sql = `
-    SELECT * FROM randori
-    WHERE judoka_id = ?
-  `
-
-  db.all(sql, [id], (err, rows)=>{
-
-    if(err){
-      return res.status(500).json({ error: err.message })
+// GET randori by session
+router.get("/session/:session_id", (req, res) => {
+  db.all(
+    "SELECT * FROM randori WHERE session_id = ?",
+    [req.params.session_id],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.
+        message });
+      res.json(rows);
     }
+  );
+});
 
-    res.json(rows)
-
-  })
-
-})
-
-module.exports = router
+module.exports = router;
